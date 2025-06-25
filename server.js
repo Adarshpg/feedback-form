@@ -113,12 +113,38 @@ app.use((req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({
-    success: false,
-    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
-    stack: process.env.NODE_ENV === 'production' ? undefined : err.stack
+  console.error('❌ Unhandled error in request:', {
+    method: req.method,
+    url: req.originalUrl,
+    error: {
+      message: err.message,
+      name: err.name,
+      stack: err.stack,
+      ...(err.errors && { errors: err.errors })
+    }
   });
+  
+  res.status(err.status || 500).json({
+    success: false,
+    error: process.env.NODE_ENV === 'production' 
+      ? 'Internal server error' 
+      : err.message,
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+  });
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  // You might want to exit the process in production
+  // process.exit(1);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  // You might want to exit the process in production
+  // process.exit(1);
 });
 
 function printRoutes(layer, path = '') {

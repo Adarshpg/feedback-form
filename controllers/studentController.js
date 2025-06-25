@@ -37,13 +37,43 @@ exports.registerStudent = async (req, res) => {
     
     res.status(201).json(savedStudent);
   } catch (err) {
-    console.error('Error in registerStudent:', {
+    console.error('❌ Error in registerStudent:', {
       message: err.message,
-      stack: err.stack,
       name: err.name,
+      code: err.code,
+      keyPattern: err.keyPattern,
+      keyValue: err.keyValue,
+      stack: err.stack,
       ...(err.errors && { errors: err.errors })
     });
-    res.status(500).send('Server error');
+    
+    // Handle duplicate key errors
+    if (err.code === 11000) {
+      const field = Object.keys(err.keyPattern)[0];
+      const value = err.keyValue[field];
+      console.error(`Duplicate key error: ${field} '${value}' already exists`);
+      return res.status(400).json({ 
+        success: false, 
+        error: `${field} '${value}' is already registered` 
+      });
+    }
+
+    // Handle validation errors
+    if (err.name === 'ValidationError') {
+      const errors = Object.values(err.errors).map(e => e.message);
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: errors
+      });
+    }
+
+    // For all other errors
+    res.status(500).json({ 
+      success: false, 
+      error: 'Server error',
+      message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+    });
   }
 };
 
