@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const studentSchema = new mongoose.Schema({
+  // Note: batchId has been replaced with contactNo
   name: {
     type: String,
     required: true
@@ -19,7 +20,7 @@ const studentSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  batchId: {
+  contactNo: {
     type: String,
     required: true
   },

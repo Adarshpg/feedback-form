@@ -7,9 +7,9 @@ exports.registerStudent = async (req, res) => {
   try {
     console.log('Received registration request with data:', req.body);
     
-    const { name, email, rollNumber, collegeName, course, semester } = req.body;
+    const { name, email, rollNumber, collegeName, contactNo, course, semester } = req.body;
     
-    console.log('Extracted data:', { name, email, rollNumber, collegeName, course, semester });
+    console.log('Extracted data:', { name, email, rollNumber, collegeName, contactNo, course, semester });
 
     // Check if student already exists
     let student = await Student.findOne({ email });
@@ -23,6 +23,7 @@ exports.registerStudent = async (req, res) => {
       email,
       rollNumber,
       collegeName,
+      contactNo,
       course,
       semester,
       completionPercentage: 0,
