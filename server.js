@@ -80,12 +80,62 @@ connectDB();
 const studentRoutes = require('./routes/studentRoutes');
 const feedbackRoutes = require('./routes/feedbackRoutes');
 
-// Use routes
-app.use('/api/students', studentRoutes);
+// Log route registration
+console.log('Registering routes...');
+
+// Use routes with error handling
+app.use('/api/students', (req, res, next) => {
+  console.log(`[${new Date().toISOString()}] Incoming request to /api/students${req.url}`);
+  next();
+}, studentRoutes);
+
 app.use('/api/feedback', feedbackRoutes);
 
-const PORT = process.env.PORT || 5000;
+// Log all registered routes
+app._router.stack.forEach((r) => {
+  if (r.route && r.route.path) {
+    console.log(`Registered route: ${Object.keys(r.route.methods).join(', ').toUpperCase()} ${r.route.path}`);
+  }
+});
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// 404 handler
+app.use((req, res) => {
+  console.error(`404: Route not found - ${req.method} ${req.originalUrl}`);
+  res.status(404).json({ 
+    success: false, 
+    error: 'Route not found',
+    path: req.originalUrl,
+    method: req.method
+  });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({
+    success: false,
+    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
+    stack: process.env.NODE_ENV === 'production' ? undefined : err.stack
+  });
+});
+
+function printRoutes(layer, path = '') {
+  if (layer.route) {
+    console.log(`  ${Object.keys(layer.route.methods).join(',').toUpperCase()} ${path + layer.route.path}`);
+  } else if (layer.name === 'router') {
+    layer.handle.stack.forEach((sublayer) => {
+      printRoutes(sublayer, path + (layer.regexp.toString().includes('^/?\\/?(?=\\/|$)') ? '' : layer.regexp.source));
+    });
+  }
+}
+
+// Start the server
+const PORT = process.env.PORT || 5000;
+const server = app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`MongoDB: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}`);
+  console.log('Available routes:');
+  app._router.stack.forEach(printRoutes);
+  console.log('Press CTRL+C to stop the server');
 });
