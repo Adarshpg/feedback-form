@@ -41,9 +41,13 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb+srv://gayadolliadarsh:NfPJCdg
 .then(() => console.log('MongoDB connected'))
 .catch(err => console.error('MongoDB connection error:', err));
 
-// Routes
-app.use('/api/students', require('./routes/studentRoutes'));
-app.use('/api/feedback', require('./routes/feedbackRoutes'));
+// Import routes
+const studentRoutes = require('./routes/studentRoutes');
+const feedbackRoutes = require('./routes/feedbackRoutes');
+
+// Use routes
+app.use('/api/students', studentRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 const PORT = process.env.PORT || 5000;
 
