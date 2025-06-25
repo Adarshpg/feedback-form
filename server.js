@@ -8,29 +8,31 @@ dotenv.config();
 
 const app = express();
 
-// Allowed origins
-const allowedOrigins = [
-  'http://localhost:3000',
-  'https://frontendfeedback-7tse.vercel.app',
-  'https://frontendfeedback.vercel.app'
-];
+// Get allowed origins from environment variable
+const whitelist = process.env.FRONTEND_URL 
+  ? process.env.FRONTEND_URL.split(',') 
+  : [];
+
+console.log('Allowed origins:', whitelist);
 
 // CORS configuration
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
+  origin: (origin, callback) => {
+    console.log('Incoming origin:', origin);
+    if (!origin || whitelist.some(allowed => origin.startsWith(allowed))) {
+      console.log('Origin allowed:', origin);
+      callback(null, true);
+    } else {
+      console.error(`Origin not allowed: ${origin}`);
+      console.error('Allowed origins:', whitelist);
+      callback(new Error('Not allowed by CORS'));
     }
-    return callback(null, true);
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   credentials: true,
-  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+  optionsSuccessStatus: 200, // Some legacy browsers choke on 204
+  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar']
 };
 
 // Enable CORS for all routes
