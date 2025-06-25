@@ -8,27 +8,16 @@ dotenv.config();
 
 const app = express();
 
-// CORS configuration
-const allowedOrigins = [
-  'http://localhost:3000',  // Local development
-  'https://frontendfeedback-7tse.vercel.app',  // Vercel frontend URL
-  'https://frontendfeedback.vercel.app'  // In case of custom domain in the future
-];
-
-// Middleware
+// CORS configuration - temporarily allowing all origins for debugging
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl, etc.)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
+  origin: '*',  // Allow all origins - in production, replace with specific origins
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
+
+// Handle preflight requests
+app.options('*', cors());
 
 app.use(express.json());
 
