@@ -10,22 +10,34 @@ const app = express();
 
 // Get allowed origins from environment variable
 const whitelist = process.env.FRONTEND_URL 
-  ? process.env.FRONTEND_URL.split(',') 
+  ? process.env.FRONTEND_URL.split(',').map(url => url.trim())
   : [];
 
-console.log('Allowed origins:', whitelist);
+// Add protocol-less domains
+whitelist.push('http://localhost:5000'); // For local development
+whitelist.push('https://feedback-form-1-k0xa.onrender.com'); // Your backend URL
+
+console.log('Allowed CORS origins:', whitelist);
 
 // CORS configuration
 const corsOptions = {
   origin: (origin, callback) => {
-    console.log('Incoming origin:', origin);
-    if (!origin || whitelist.some(allowed => origin.startsWith(allowed))) {
-      console.log('Origin allowed:', origin);
-      callback(null, true);
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Check if the origin is in the whitelist
+    const allowed = whitelist.some(allowedUrl => {
+      return origin.startsWith(allowedUrl) || 
+             origin.startsWith(allowedUrl.replace('https://', 'http://'));
+    });
+
+    if (allowed) {
+      console.log(`✅ CORS Allowed: ${origin}`);
+      return callback(null, true);
     } else {
-      console.error(`Origin not allowed: ${origin}`);
+      console.error(`❌ CORS Blocked: ${origin}`);
       console.error('Allowed origins:', whitelist);
-      callback(new Error('Not allowed by CORS'));
+      return callback(new Error('Not allowed by CORS'));
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
