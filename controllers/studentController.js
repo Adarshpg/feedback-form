@@ -1,5 +1,40 @@
 const Student = require('../models/Student');
 
+// @desc    Login student
+// @route   POST /api/students/login
+// @access  Public
+exports.loginStudent = async (req, res) => {
+  try {
+    const { email, rollNumber } = req.body;
+    
+    // Find student by email and roll number
+    const student = await Student.findOne({ email, rollNumber });
+    
+    if (!student) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    
+    // Return student data (excluding sensitive information)
+    const { _id, name, completionPercentage, feedbackGiven } = student;
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        _id,
+        name,
+        email,
+        rollNumber,
+        completionPercentage,
+        feedbackGiven
+      }
+    });
+    
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
 // @desc    Register a new student
 // @route   POST /api/students
 // @access  Public
