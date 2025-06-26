@@ -1,40 +1,38 @@
 const mongoose = require('mongoose');
 
-const feedbackSchema = new mongoose.Schema({
+const FeedbackSchema = new mongoose.Schema({
   student: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Student',
     required: true
   },
+  answers: [
+    {
+      question: {
+        type: String,
+        required: true
+      },
+      answer: {
+        type: String,
+        required: true
+      }
+    }
+  ],
   completionPercentage: {
     type: Number,
     required: true,
-    enum: [20, 50, 100] // Only these completion percentages are allowed
-  },
-  answers: [{
-    question: {
-      type: String,
-      required: true
-    },
-    rating: {
-      type: Number,
-      required: true,
-      min: 1,
-      max: 5
-    },
-    comment: {
-      type: String,
-      default: ''
-    }
-  }],
-  additionalComments: {
-    type: String,
-    default: ''
+    min: 0,
+    max: 100
   },
   submittedAt: {
     type: Date,
     default: Date.now
   }
+}, {
+  timestamps: true
 });
 
-module.exports = mongoose.model('Feedback', feedbackSchema);
+// Add indexes for better query performance
+FeedbackSchema.index({ student: 1, completionPercentage: 1 });
+
+module.exports = mongoose.model('Feedback', FeedbackSchema);
